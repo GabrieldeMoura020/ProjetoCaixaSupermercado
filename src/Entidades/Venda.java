@@ -1,25 +1,19 @@
 package Entidades;
-
-
-import Enums.Pago;
+import Enums.Situacao;
 import Enums.StatusVenda;
 import Enums.TipoPagamento;
+import Exceptions.SaidaException;
 import Repository.ProdutoDAO;
 
 import javax.swing.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Venda {
 
     private List<ItemVenda> item = new ArrayList<>();
-
-    private ItemVenda itemVenda;
     private Cliente cliente;
-    private Pago pago;
+    private Situacao pago;
     private StatusVenda status;
     private TipoPagamento tipoPagamento;
     private Date now = new Date();
@@ -45,7 +39,6 @@ public class Venda {
         return soma;
     }
 
-
     public void validacao(){
 
     }
@@ -65,28 +58,35 @@ public class Venda {
         item.add(itens);
     }
 
-    public void validaItem(){
+    public void validaItem() throws SaidaException {
         boolean cadastrando = true;
 
-            while (cadastrando == true ){
-            Integer quantidadeProduto = Integer.valueOf(JOptionPane.showInputDialog(null, "Digite aquantidade do produto:", "Balcão", JOptionPane.QUESTION_MESSAGE));
-            Integer codigoProduto = Integer.valueOf(JOptionPane.showInputDialog(null, "Digite o código do produto:", "Balcão", JOptionPane.QUESTION_MESSAGE));
 
-            List<ItemVenda> itens = ProdutoDAO.buscarPorCodigo(codigoProduto);
+                while (cadastrando == true) {
+                    try {
+                        Integer quantidadeProduto = Integer.valueOf(JOptionPane.showInputDialog(null, "Digite aquantidade do produto: \n 0 - Subtotal", "Balcão", JOptionPane.QUESTION_MESSAGE));
+                        if (quantidadeProduto == 0) {System.out.println("Total Venda: " + Total()); break;}
+                        Integer codigoProduto = Integer.valueOf(JOptionPane.showInputDialog(null, "Digite o código do produto: \n 0 - Subtotal", "Balcão", JOptionPane.QUESTION_MESSAGE));
+                        if(codigoProduto == 0){System.out.println("Total Venda: " + Total()); break;}
 
-            for (ItemVenda itemAdicionar : itens) {
-                itemAdicionar.setQuantidade(quantidadeProduto);
-                itemAdicionar = new ItemVenda(codigoProduto,itemAdicionar.getNomeProduto(),itemAdicionar.getValorUnitario(),itemAdicionar.getQuantidade());
+                        List<ItemVenda> itens = ProdutoDAO.buscarPorCodigo(codigoProduto);
 
-                System.out.println("Item Adicionado a venda: " + itemAdicionar);
-                adicionarItem(itemAdicionar);
-            }
+                        for (ItemVenda itemAdicionar : itens) {
+                            itemAdicionar.setQuantidade(quantidadeProduto);
+                            itemAdicionar = new ItemVenda(codigoProduto, itemAdicionar.getNomeProduto(), itemAdicionar.getValorUnitario(), itemAdicionar.getQuantidade());
 
-            if(codigoProduto == 0) {
-                System.out.println("Tatal da venda: " + Total());
-                cadastrando = false;}
-        }
+                            System.out.println("Item Adicionado a venda: " + itemAdicionar);
+                            adicionarItem(itemAdicionar);
 
+                            while (Numero == getNumber()){
+                                System.out.println("Codigo do produto ja existe");
+                            }
+                        }
+                    }
+                    catch (NumberFormatException b ){
+                        Main.telaInicial();
+                    }
+                }
     }
 
     public void salvarItem(ItemVenda salvaItem){
@@ -114,11 +114,15 @@ public class Venda {
         bd.append("                   CUPOM FISCAL \n");
         bd.append("====================================================\n");
         if(cliente!=null){
-            bd.append("Cliente: " + cliente + "\n");
+            bd.append("Cliente: " + cliente.getPessoa().getNome() + "\n");
+            bd.append("CPF/CNPJ: " + cliente.getPessoa().getDocumentoPrincipal() + "\n");
+
         }else {
-            bd.append("Cliente: não cadastrado \n");
+            bd.append("Cliente: Consumidor final\n");
         }
-        bd.append("Número do pedido:                         "+ Numero+ "\n");
+        Random numero = new Random();
+        Numero = numero.nextInt(100);
+        bd.append("Número do pedido:                         "+ Numero + "\n");
         bd.append("Data da Compra:                           " + sdf.format(now) + "\n");
         setStatus(StatusVenda.IMPRIMINDO);
         bd.append("Status:                                   " + getStatus() + "\n");
@@ -140,6 +144,7 @@ public class Venda {
         return bd.toString();
     }
 
+
     public List<ItemVenda> getItem() {
         return item;
     }
@@ -152,11 +157,11 @@ public class Venda {
         this.cliente = cliente;
     }
 
-    public Pago getPago() {
+    public Situacao getPago() {
         return pago;
     }
 
-    public void setPago(Pago pago) {
+    public void setPago(Situacao pago) {
         this.pago = pago;
     }
 
@@ -195,4 +200,5 @@ public class Venda {
     public void setParcelas(Integer parcelas) {
         this.Parcelas = parcelas;
     }
+
 }
